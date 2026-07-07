@@ -1,0 +1,102 @@
+name: Initialize SleepDiaries Protocol from version
+
+# Run manually from the Actions tab after creating a repo from this template.
+# Pick a released version of SleepDiaries and this will replace the placeholder
+# content in this repo with that version, stripped of lab-specific config.
+#
+# NOTE FOR MAINTAINERS (circadia-bio/SleepDiaries):
+# Add new stable tags to the "options" list below whenever a new version is
+# released, so adapters using this template can pick it up. Also update the
+# "Available versions" line in this repo's README.md to match — the two
+# lists are not derived from each other and will drift if only one is kept
+# current.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'SleepDiaries release tag to build this repo from'
+        required: true
+        default: 'v1.1.3'
+        type: choice
+        options:
+          - v1.1.3
+          - v1.1.2
+          - v1.1.1
+          - v1.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Verify chosen tag exists on circadia-bio/SleepDiaries
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://api.github.com/repos/circadia-bio/SleepDiaries/git/refs/tags/${{ github.event.inputs.version }}")
+          if [ "$STATUS" != "200" ]; then
+            echo "::error::Tag '${{ github.event.inputs.version }}' was not found on circadia-bio/SleepDiaries. Check https://github.com/circadia-bio/SleepDiaries/tags for valid versions."
+            exit 1
+          fi
+
+      - name: Preserve template scaffolding before the swap
+        run: |
+          mkdir -p /tmp/keep/.github/workflows
+          cp .github/workflows/init-from-version.yml /tmp/keep/.github/workflows/
+          cp .github/scripts/genericize_readme.py /tmp/keep/
+          [ -f TEMPLATE_SETUP.md ] && cp TEMPLATE_SETUP.md /tmp/keep/ || true
+
+      - name: Download chosen release source
+        run: |
+          curl -L -o /tmp/source.tar.gz \
+            "https://github.com/circadia-bio/SleepDiaries/archive/refs/tags/${{ github.event.inputs.version }}.tar.gz"
+          mkdir /tmp/source
+          tar -xzf /tmp/source.tar.gz -C /tmp/source --strip-components=1
+
+      - name: Strip lab-specific / study-specific files
+        run: |
+          cd /tmp/source
+          # Academic citation metadata tied to the original research project
+          rm -f CITATION.cff
+          # Fathom analytics + circadia-lab.uk domain references are injected
+          # here; adapters should reconfigure this for their own deployment
+          rm -f scripts/deploy.sh
+          # Any Netlify config pointed at the original site
+          rm -f netlify.toml
+          # CI workflows are lab-specific (test/deploy pipelines) and, more
+          # importantly, GITHUB_TOKEN can never push changes under
+          # .github/workflows/ — only a PAT with the 'workflow' scope can.
+          # Adapters should add their own CI once they've set up the fork.
+          rm -rf .github/workflows
+          echo "Stripped lab-specific files."
+
+      - name: Genericize README for template use
+        run: |
+          python3 /tmp/keep/genericize_readme.py \
+            /tmp/source/README.md \
+            "${{ github.event.inputs.version }}"
+
+      - name: Replace placeholder content with release source
+        run: |
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp -r /tmp/source/. .
+          mkdir -p .github/workflows
+          cp /tmp/keep/.github/workflows/init-from-version.yml .github/workflows/
+          [ -f /tmp/keep/TEMPLATE_SETUP.md ] && cp /tmp/keep/TEMPLATE_SETUP.md . || true
+          rm -rf /tmp/source /tmp/source.tar.gz
+
+      - name: Remove this workflow to prevent re-triggering
+        run: rm -f .github/workflows/init-from-version.yml
+
+      - name: Commit seeded content
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "🌱 init: seed SleepDiaries Protocol from ${{ github.event.inputs.version }}"
+          git push
