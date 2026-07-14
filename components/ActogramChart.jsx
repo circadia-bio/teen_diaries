@@ -187,10 +187,10 @@ export default function ActogramChart({ entries }) {
 
   const startDate  = new Date(`${calendarDays[leftIndex].date}T12:00:00`);
   const endDate    = new Date(`${calendarDays[rightIndex].date}T12:00:00`);
-  const sameMonth  = startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear();
-  const rangeLabel = sameMonth
-    ? `${startDate.toLocaleDateString(locale, { day: 'numeric' })} \u2013 ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`
-    : `${startDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} \u2013 ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  // Always include the month on both ends, even within the same month —
+  // a bare day number next to a full "Jul 13, 2026" reads as a typo rather
+  // than a range, since Intl puts the month before the day in this locale.
+  const rangeLabel = `${startDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} \u2013 ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
   const atStart = scrollX <= 0;
   const atEnd   = scrollX >= maxScrollX - 1;
