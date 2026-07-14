@@ -39,6 +39,9 @@ import { FONTS, SIZES } from '../theme/typography';
 const ASLEEP_FILL   = '#2E7D3233'; // green @ 20% — matches BandBar's band alpha
 const AWAKE_FILL    = '#F59E0B33'; // amber @ 20%
 const WAKING_COLOR  = '#DC2626';   // solid — a marker, not a band
+const WAKING_DOT_R      = 3;
+const WAKING_DOT_GAP    = 7;   // preferred centre-to-centre spacing
+const WAKING_ROW_OFFSET = 9;   // distance above the bar's top edge
 const MIDPOINT_COLOR = '#1E3A5F';  // navy dashed trend line — sleep midpoint
 const GRID_COLOR    = '#E2EAF4';
 const AXIS_TEXT     = '#94A3B8';
@@ -291,10 +294,18 @@ export default function ActogramChart({ entries }) {
               const yOut   = yFor(outOfBed) + TOP_PAD;
 
               const wakings = a.mq4 === 'yes' ? (a.mq4b ?? 0) : 0;
-              const dots = [];
-              for (let k = 1; k <= wakings; k++) {
-                dots.push(yOnset + ((yWake - yOnset) * k) / (wakings + 1));
-              }
+              // Dots sit in a row just above the bar rather than inside it —
+              // exact within-night timing isn't recorded, so a count of
+              // markers reads more honestly than scattering them through the
+              // asleep segment. Spacing tightens for higher counts so the
+              // row never spills wider than the bar itself.
+              const dotY = Math.max(WAKING_DOT_R + 1, yBed - WAKING_ROW_OFFSET);
+              const dotSpacing = wakings > 1
+                ? Math.min(WAKING_DOT_GAP, (BAR_WIDTH - WAKING_DOT_R * 2) / (wakings - 1))
+                : 0;
+              const dotXs = Array.from({ length: wakings }, (_, k) =>
+                colCenter - ((wakings - 1) * dotSpacing) / 2 + k * dotSpacing,
+              );
 
               const dayLabel = new Date(`${entry.date}T12:00:00`).toLocaleDateString(locale, { weekday: 'short' });
 
@@ -306,8 +317,8 @@ export default function ActogramChart({ entries }) {
                     <Rect x={0} y={yOnset} width={BAR_WIDTH} height={Math.max(0, yWake - yOnset)} fill={ASLEEP_FILL} />
                     <Rect x={0} y={yWake}  width={BAR_WIDTH} height={Math.max(0, yOut - yWake)} fill={AWAKE_FILL} />
                   </G>
-                  {dots.map((dy, idx) => (
-                    <Circle key={idx} cx={colCenter} cy={dy} r={4} fill={WAKING_COLOR} />
+                  {dotXs.map((dx, idx) => (
+                    <Circle key={idx} cx={dx} cy={dotY} r={WAKING_DOT_R} fill={WAKING_COLOR} />
                   ))}
                   <SvgText
                     x={colCenter}
