@@ -17,6 +17,8 @@ export const MORNING_QUESTIONS_PT_BR = [
   { id: 'mq4b', text: 'Quantas vezes você acordou?', unit: 'vezes' },
   { id: 'mq5',  text: 'Quanto tempo no total você ficou acordado(a) durante a noite?' },
   { id: 'mq6',  text: 'Que horas você acordou de vez?' },
+  { id: 'mq_phone', text: 'Depois de pegar no sono pela primeira vez, você checou o celular em algum momento durante a noite?', hint: 'Isso inclui checar mensagens, redes sociais, ou apenas ver as horas.' },
+  { id: 'mq_phone_count', text: 'Mais ou menos quantas vezes você checou o celular?', unit: 'vezes' },
   { id: 'mq7',  text: 'Que horas você se levantou da cama?' },
   { id: 'mq8',  text: 'Você acordou mais cedo do que planejava?' },
   { id: 'mq8b', text: 'Quanto mais cedo você acordou?' },
