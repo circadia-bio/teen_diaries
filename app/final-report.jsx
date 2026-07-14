@@ -12,6 +12,7 @@ import { useEntries } from '../storage/EntriesContext';
 import { MIN_ENTRIES_FOR_REPORT } from '../utils/constants';
 import { computeMetrics } from '../utils/metrics';
 import { QUESTIONNAIRES } from '../data/questionnaires';
+import ActogramChart from '../components/ActogramChart';
 import { FONTS, SIZES } from '../theme/typography';
 import t, { locale } from '../i18n';
 import ViewShot from 'react-native-view-shot';
@@ -636,6 +637,18 @@ export default function FinalReportScreen() {
             </View>
           </View>
 
+          <Section title={t('report.sleepPattern')}>
+            <View style={styles.actogramLegendRow}>
+              <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#2E7D32' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAsleep')}</Text></View>
+              <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#F59E0B' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAwake')}</Text></View>
+              <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#DC2626' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendWaking')}</Text></View>
+            </View>
+            <View style={styles.actogramCard}>
+              <ActogramChart entries={morning} />
+            </View>
+            <Text style={[styles.thresholdNote, { fontFamily: FONTS.bodyMedium }]}>{t('report.sleepPatternNote')}</Text>
+          </Section>
+
           <Section title={t('report.sleepTiming')}>
             <MetricCard icon="time-outline"        label={t('report.avgSleepDuration')}   value={formatMinutes(metrics.avgSleepDuration)}    subtext={t('report.avgSleepDurationSub')}  color={durationColor(metrics.avgSleepDuration)}  bar={<DurationBar value={metrics.avgSleepDuration} />} />
             <MetricCard icon="speedometer-outline" label={t('report.sleepEfficiency')} value={metrics.avgSleepEfficiency !== null ? `${Math.round(metrics.avgSleepEfficiency)}%` : '—'} subtext={t('report.sleepEfficiencySub')} color={metrics.avgSleepEfficiency >= 85 ? '#2E7D32' : '#C25E00'} bar={<EfficiencyBar value={metrics.avgSleepEfficiency} />} />
@@ -719,6 +732,12 @@ const styles = StyleSheet.create({
   starLabel:    { fontSize: SIZES.body, marginLeft: 6 },
   disclaimer:   { fontSize: SIZES.caption, color: '#94A3B8', textAlign: 'center', lineHeight: 22, paddingHorizontal: 8, marginTop: 8 },
   thresholdNote: { fontSize: SIZES.caption, color: '#94A3B8', lineHeight: 22, marginTop: 4, paddingHorizontal: 2, textAlign: 'center' },
+  actogramCard:  { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.9)', shadowColor: '#4A7BB5', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 8, elevation: 3 },
+  actogramLegendRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, paddingHorizontal: 2 },
+  legendItem:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  legendSwatch:  { width: 12, height: 12, borderRadius: 3 },
+  legendDot:     { width: 10, height: 10, borderRadius: 5 },
+  legendLabel:   { fontSize: SIZES.caption, color: '#5B7089' },
 
   // Questionnaire report cards
   qReportCard:       { backgroundColor: 'rgba(255,255,255,0.72)', borderRadius: 14, padding: 16, gap: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.9)', shadowColor: '#4A7BB5', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.10, shadowRadius: 8, elevation: 3 },
