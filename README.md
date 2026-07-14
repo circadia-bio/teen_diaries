@@ -218,6 +218,7 @@ Teenage Sleep Diaries includes a set of validated one-time research questionnair
 
 | Instrument | Full name | Items | Scale | Measures |
 |------------|-----------|-------|-------|----------|
+| ESS-CHAD | Epworth Sleepiness Scale for Children and Adolescents | 8 | 0–3 per item (max 24) | Daytime sleepiness |
 | MCTQ | Munich Chronotype Questionnaire | 7 | MSFsc (clock time) + SJL (hours) | Chronotype + social jetlag |
 
 > The other validated instruments (ESS, ISI, DBAS-16, PSQI, RU-SATED, STOP-BANG) remain fully defined in `data/questionnaires.js` but are currently disabled — re-enable any of them by adding them back to the `QUESTIONNAIRES` array at the bottom of that file.
@@ -285,6 +286,7 @@ Several instruments are protected by copyright. The `credit` field on each defin
 
 | Instrument | Status |
 |------------|--------|
+| ESS-CHAD | © Murray W. Johns — licence required, whether or not a fee is payable (epworthsleepinessscale.com/licenses) |
 | ESS | © Murray W. Johns — permission required for commercial use |
 | ISI | © Charles M. Morin — available for non-commercial research |
 | DBAS-16 | © Charles M. Morin — available via MAPI Research Trust |

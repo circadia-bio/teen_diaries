@@ -105,6 +105,46 @@ export const ESS = {
   },
 };
 
+// ─── ESS-CHAD (children & adolescents) ───────────────────────────────────────
+
+export const ESSCHAD = {
+  id:         'esschad',
+  title:      'Epworth Sleepiness Scale for Children and Adolescents',
+  shortTitle: 'ESS-CHAD',
+  credit:     'Johns, M. W. (2015). ESS-CHAD. epworthsleepinessscale.com. © Murray W. Johns, 1990, 2015. A licence is required to use the ESS-CHAD, whether or not a licence fee is payable — see epworthsleepinessscale.com/licenses.',
+  instructions:
+    'Over the last month, how likely have you been to fall asleep while doing the ' +
+    'things that are described below (activities)? Even if you haven\'t done some ' +
+    'of these things in the last month, try to imagine how they would have affected ' +
+    'you. Use the following scale to choose one number that best describes what has ' +
+    'been happening to you during each activity over the last month: 0 = would never ' +
+    'fall asleep, 1 = slight chance of falling asleep, 2 = moderate chance of falling ' +
+    'asleep, 3 = high chance of falling asleep. It is important that you answer each ' +
+    'question as best you can.',
+  reference:
+    'Johns, M. W. (2015). Epworth Sleepiness Scale for Children and Adolescents (ESS-CHAD). epworthsleepinessscale.com.',
+  items: [
+    { id: 'esschad1', number: 1, text: 'Sitting and reading',                                    type: 'scale_0_3', options: SCALE_0_3 },
+    { id: 'esschad2', number: 2, text: 'Sitting and watching TV or a video',                       type: 'scale_0_3', options: SCALE_0_3 },
+    { id: 'esschad3', number: 3, text: 'Sitting in a classroom at school during the morning',       type: 'scale_0_3', options: SCALE_0_3 },
+    { id: 'esschad4', number: 4, text: 'Sitting and riding in a car or bus for about half an hour', type: 'scale_0_3', options: SCALE_0_3 },
+    { id: 'esschad5', number: 5, text: 'Lying down to rest or nap in the afternoon',                type: 'scale_0_3', options: SCALE_0_3 },
+    { id: 'esschad6', number: 6, text: 'Sitting and talking to someone',                            type: 'scale_0_3', options: SCALE_0_3 },
+    { id: 'esschad7', number: 7, text: 'Sitting quietly by yourself after lunch',                   type: 'scale_0_3', options: SCALE_0_3 },
+    { id: 'esschad8', number: 8, text: 'Sitting and eating a meal',                                 type: 'scale_0_3', options: SCALE_0_3 },
+  ],
+  score: (answers) =>
+    [1,2,3,4,5,6,7,8].reduce((s, n) => s + (answers[`esschad${n}`] ?? 0), 0),
+  interpret: (score) => {
+    // Johns (2015) scores the ESS-CHAD identically to the adult ESS and expects
+    // the same normal range, though this is noted as awaiting confirmation.
+    if (score <= 7)  return { label: 'Normal',    color: '#2E7D32', description: 'Your daytime sleepiness is within the range considered normal for adults, which is believed (but not yet confirmed) to also apply to children and adolescents.' };
+    if (score <= 9)  return { label: 'Borderline',color: '#F59E0B', description: 'Your score is at the borderline. Consider monitoring sleep patterns.' };
+    if (score <= 15) return { label: 'Excessive', color: '#EA580C', description: 'This score may indicate excessive daytime sleepiness. Consider discussing this with a clinician.' };
+    return              { label: 'Severe',     color: '#DC2626', description: 'This score indicates severe excessive daytime sleepiness. We recommend seeking medical advice.' };
+  },
+};
+
 // ─── ISI ──────────────────────────────────────────────────────────────────────
 
 export const ISI = {
@@ -621,9 +661,9 @@ function fmtH(h) {
 
 // ─── Registry ─────────────────────────────────────────────────────────────────────
 //
-// Only MCTQ is currently active in the app. The rest (ESS, ISI, DBAS16, MEQ,
-// PSQI, RUSATED, STOPBANG) are kept defined above so they can be re-enabled
-// by adding them back to this array — no other changes needed.
-export const QUESTIONNAIRES = [MCTQ];
+// Only ESS-CHAD and MCTQ are currently active in the app. The rest (ESS, ISI,
+// DBAS16, MEQ, PSQI, RUSATED, STOPBANG) are kept defined above so they can be
+// re-enabled by adding them back to this array — no other changes needed.
+export const QUESTIONNAIRES = [ESSCHAD, MCTQ];
 
 export const getQuestionnaire = (id) => QUESTIONNAIRES.find((q) => q.id === id) ?? null;
