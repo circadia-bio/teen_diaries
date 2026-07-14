@@ -30,18 +30,19 @@
 import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Rect, Circle, Line, Text as SvgText, Defs, ClipPath, G } from 'react-native-svg';
+import Svg, { Rect, Circle, Line, Path, Text as SvgText, Defs, ClipPath, G } from 'react-native-svg';
 import { locale } from '../i18n';
 import t from '../i18n';
 import { computeMetrics } from '../utils/metrics';
 import { FONTS, SIZES } from '../theme/typography';
 
-const ASLEEP_FILL  = '#2E7D3233'; // green @ 20% — matches BandBar's band alpha
-const AWAKE_FILL   = '#F59E0B33'; // amber @ 20%
-const WAKING_COLOR = '#DC2626';   // solid — a marker, not a band
-const GRID_COLOR   = '#E2EAF4';
-const AXIS_TEXT    = '#94A3B8';
-const HEADER_TEXT  = '#1E3A5F';
+const ASLEEP_FILL   = '#2E7D3233'; // green @ 20% — matches BandBar's band alpha
+const AWAKE_FILL    = '#F59E0B33'; // amber @ 20%
+const WAKING_COLOR  = '#DC2626';   // solid — a marker, not a band
+const MIDPOINT_COLOR = '#1E3A5F';  // navy dashed trend line — sleep midpoint
+const GRID_COLOR    = '#E2EAF4';
+const AXIS_TEXT     = '#94A3B8';
+const HEADER_TEXT   = '#1E3A5F';
 
 const PX_PER_MIN = 0.5; // 30px per hour
 const COL_WIDTH  = 40;
@@ -150,6 +151,43 @@ export default function ActogramChart({ entries }) {
 
   const atStart = scrollX <= 0;
   const atEnd   = scrollX >= maxScrollX - 1;
+
+  // Sleep-midpoint trend line: the centre of each night's asleep segment,
+  // connected day to day like a small time series — reveals circadian phase
+  // drift over the study (e.g. weekend shifts) the way a real actogram would.
+  // Broken into separate runs wherever there's a gap of more than one
+  // calendar day, so we never imply a trend across missing data.
+  const midpoints = morning.map((entry, i) => {
+    const a = entry.answers;
+    const tried    = shiftedMinutes(a.mq2) ?? shiftedMinutes(a.mq1);
+    const solMin   = a.mq3 ? a.mq3.hours * 60 + a.mq3.minutes : 0;
+    const onset    = tried !== null ? tried + solMin : null;
+    const finalWake = shiftedMinutes(a.mq6) ?? shiftedMinutes(a.mq7);
+    if (onset === null || finalWake === null) return null;
+    return {
+      x: COL_GAP + i * COL_STEP + COL_WIDTH / 2,
+      y: yFor((onset + finalWake) / 2) + TOP_PAD,
+      date: entry.date,
+    };
+  });
+
+  const midpointRuns = [];
+  let currentRun = [];
+  for (const p of midpoints) {
+    if (!p) {
+      if (currentRun.length) midpointRuns.push(currentRun);
+      currentRun = [];
+      continue;
+    }
+    if (currentRun.length) {
+      const prevDate = new Date(`${currentRun[currentRun.length - 1].date}T12:00:00`);
+      const curDate  = new Date(`${p.date}T12:00:00`);
+      const dayGap   = Math.round((curDate - prevDate) / 86400000);
+      if (dayGap !== 1) { midpointRuns.push(currentRun); currentRun = []; }
+    }
+    currentRun.push(p);
+  }
+  if (currentRun.length) midpointRuns.push(currentRun);
 
   return (
     <View>
@@ -268,6 +306,23 @@ export default function ActogramChart({ entries }) {
                 </React.Fragment>
               );
             })}
+
+            {midpointRuns.map((run, idx) => (
+              <React.Fragment key={idx}>
+                {run.length > 1 && (
+                  <Path
+                    d={`M ${run.map((p) => `${p.x},${p.y}`).join(' L ')}`}
+                    stroke={MIDPOINT_COLOR}
+                    strokeWidth={1.5}
+                    strokeDasharray="4,3"
+                    fill="none"
+                  />
+                )}
+                {run.map((p) => (
+                  <Circle key={p.date} cx={p.x} cy={p.y} r={3} fill={MIDPOINT_COLOR} stroke="#fff" strokeWidth={1} />
+                ))}
+              </React.Fragment>
+            ))}
           </Svg>
         </ScrollView>
       </View>

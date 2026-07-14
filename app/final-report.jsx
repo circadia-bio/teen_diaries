@@ -622,6 +622,7 @@ export default function FinalReportScreen() {
               <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#2E7D3233', borderWidth: 1, borderColor: '#2E7D3255' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAsleep')}</Text></View>
               <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#F59E0B33', borderWidth: 1, borderColor: '#F59E0B55' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAwake')}</Text></View>
               <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#DC2626' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendWaking')}</Text></View>
+              <View style={styles.legendItem}><View style={styles.legendDash} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendMidpoint')}</Text></View>
             </View>
             <View style={styles.actogramCard}>
               <ActogramChart entries={morning} />
@@ -712,6 +713,7 @@ const styles = StyleSheet.create({
   legendItem:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendSwatch:  { width: 12, height: 12, borderRadius: 3 },
   legendDot:     { width: 10, height: 10, borderRadius: 5 },
+  legendDash:    { width: 16, height: 0, borderTopWidth: 2, borderStyle: 'dashed', borderColor: '#1E3A5F' },
   legendLabel:   { fontSize: SIZES.caption, color: '#5B7089' },
 
   // Questionnaire report cards
