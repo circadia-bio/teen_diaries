@@ -51,7 +51,7 @@ const BAR_WIDTH  = 26;
 const BAR_RADIUS = BAR_WIDTH / 2; // fully rounded (stadium) bar ends
 const TOP_PAD    = 10;
 const LABEL_GAP  = 20;
-const AXIS_WIDTH = 46;
+const AXIS_WIDTH = 58;
 const COL_STEP   = COL_WIDTH + COL_GAP;
 const WEEK_PX    = COL_STEP * 7;
 
@@ -117,16 +117,32 @@ export default function ActogramChart({ entries }) {
   const plotWidth   = morning.length * COL_STEP + COL_GAP;
   const maxScrollX  = Math.max(0, plotWidth - viewportWidth);
 
+  // Snaps a scroll offset down to the nearest column boundary (columns start
+  // at COL_GAP + k*COL_STEP) so we never leave a sliver of an adjacent day's
+  // bar peeking in at the edge — used for both the initial view and the
+  // clamp ceiling when paging by week.
+  const alignScroll = (target) => {
+    const clamped = clamp(target, 0, maxScrollX);
+    if (clamped < COL_GAP) return 0;
+    const k = Math.floor((clamped - COL_GAP) / COL_STEP);
+    return Math.min(COL_GAP + k * COL_STEP, maxScrollX);
+  };
+  const alignedMax = alignScroll(maxScrollX);
+
   useEffect(() => {
-    scrollRef.current?.scrollToEnd({ animated: false });
-  }, [morning.length]);
+    if (viewportWidth === 0) return;
+    const target = alignedMax;
+    scrollRef.current?.scrollTo({ x: target, animated: false });
+    setScrollX(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [morning.length, viewportWidth]);
 
   const handleScroll = useCallback((e) => {
     setScrollX(e.nativeEvent.contentOffset.x);
   }, []);
 
   const goToWeek = (direction) => {
-    const next = clamp(scrollX + direction * WEEK_PX, 0, maxScrollX);
+    const next = clamp(scrollX + direction * WEEK_PX, 0, alignedMax);
     scrollRef.current?.scrollTo({ x: next, animated: true });
     setScrollX(next);
   };
@@ -150,7 +166,7 @@ export default function ActogramChart({ entries }) {
     : `${startDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} \u2013 ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
   const atStart = scrollX <= 0;
-  const atEnd   = scrollX >= maxScrollX - 1;
+  const atEnd   = scrollX >= alignedMax - 1;
 
   // Sleep-midpoint trend line: the centre of each night's asleep segment,
   // connected day to day like a small time series — reveals circadian phase
