@@ -1,33 +1,36 @@
 /**
- * components/ActogramChart.jsx — Weekly/whole-study sleep pattern chart
+ * components/ActogramChart.jsx — Weekly sleep pattern chart
  *
- * Renders one vertical bar per morning diary entry, from bedtime (mq1) to
- * out-of-bed time (mq7). Colours reuse the same green/amber/red semantics as
- * the other Final Report metric bars (durationColor, latencyColor, wasoColor
- * in app/final-report.jsx), but softened with the same alpha treatment those
+ * Renders exactly 7 day-columns at a time (like Apple Health's weekly sleep
+ * chart) — column width scales to fill the available space, rather than
+ * being a fixed pixel size, so the number of visible days never depends on
+ * screen width. Each column is one vertical bar from bedtime (mq1) to
+ * out-of-bed time (mq7).
+ *
+ * Colours reuse the same green/amber/red semantics as the other Final
+ * Report metric bars (durationColor, latencyColor, wasoColor in
+ * app/final-report.jsx), but softened with the same alpha treatment those
  * bars already use for their reference bands (see BandBar's `color + '33'`):
  *   - soft green (#2E7D32 @ 20%) — asleep
  *   - soft amber (#F59E0B @ 20%) — awake in bed (before falling asleep /
  *                                  after final waking, and the brief
  *                                  falling-asleep window)
- *   - solid red  (#DC2626)       — a night waking marker, kept solid like
- *                                  BandBar's marker line, since it's a point
- *                                  event rather than a background band
- *     (illustrative only — the diary records a count and total duration,
- *      not exact times)
+ *   - solid red  (#DC2626)       — night waking markers, in a row just above
+ *                                  the bar (illustrative only — the diary
+ *                                  records a count and total duration, not
+ *                                  exact times)
  *
  * Each day's bar is clipped to a single stadium (fully rounded) shape so the
- * colour transitions inside it read as one continuous rounded bar, matching
- * the rest of the app's rounded-corner aesthetic, rather than each segment
- * having its own independently-rounded (and visually seamed) corners.
+ * colour transitions inside it read as one continuous rounded bar.
  *
- * The Y axis is fixed on the left; only the bars scroll horizontally, so the
- * chart can span the whole study period. Chevrons page by one week at a time
- * (Apple Health style); free dragging still works for finer navigation, and
- * the header — including the average sleep duration for the visible week,
- * also Apple-Health-style — updates as you scroll either way.
+ * The Y axis is fixed on the left. Chevrons page by exactly one week (one
+ * viewport width); because column width is always viewportWidth / 7, paging
+ * can never land on a partial column — there's nothing to align, by
+ * construction. Free dragging still works for finer navigation, and the
+ * header — including the average sleep duration for the visible week, also
+ * Apple-Health-style — updates as you scroll either way.
  */
-import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Rect, Circle, Line, Path, Text as SvgText, Defs, ClipPath, G } from 'react-native-svg';
@@ -47,16 +50,12 @@ const GRID_COLOR    = '#E2EAF4';
 const AXIS_TEXT     = '#94A3B8';
 const HEADER_TEXT   = '#1E3A5F';
 
+const DAYS_PER_VIEW  = 7;
+const BAR_WIDTH_RATIO = 0.5; // bar occupies half its column's width
 const PX_PER_MIN = 0.5; // 30px per hour
-const COL_WIDTH  = 40;
-const COL_GAP    = 12;
-const BAR_WIDTH  = 26;
-const BAR_RADIUS = BAR_WIDTH / 2; // fully rounded (stadium) bar ends
 const TOP_PAD    = 10;
 const LABEL_GAP  = 20;
 const AXIS_WIDTH = 58;
-const COL_STEP   = COL_WIDTH + COL_GAP;
-const WEEK_PX    = COL_STEP * 7;
 
 // Shifts a clock time so hours before noon count as "the next day" — lets us
 // compare/plot bedtime and wake time on one continuous scale across midnight.
@@ -88,14 +87,11 @@ export default function ActogramChart({ entries }) {
   const [viewportWidth, setViewportWidth] = useState(0);
   const [scrollX, setScrollX] = useState(0);
 
-  const morning = useMemo(
-    () => entries
-      .filter((e) => e.type === 'morning' && e.answers?.mq1 && e.answers?.mq7)
-      .sort((a, b) => a.date.localeCompare(b.date)),
-    [entries],
-  );
+  const morning = entries
+    .filter((e) => e.type === 'morning' && e.answers?.mq1 && e.answers?.mq7)
+    .sort((a, b) => a.date.localeCompare(b.date));
 
-  const { rangeStart, rangeEnd } = useMemo(() => {
+  const rangeCalc = (() => {
     if (morning.length === 0) return { rangeStart: 20 * 60, rangeEnd: 36 * 60 };
     let min = Infinity;
     let max = -Infinity;
@@ -109,7 +105,8 @@ export default function ActogramChart({ entries }) {
       rangeStart: floorTo(min - 30, 120),
       rangeEnd:   ceilTo(max + 30, 120),
     };
-  }, [morning]);
+  })();
+  const { rangeStart, rangeEnd } = rangeCalc;
 
   const chartHeight = (rangeEnd - rangeStart) * PX_PER_MIN;
   const yFor = (mins) => (mins - rangeStart) * PX_PER_MIN;
@@ -117,26 +114,21 @@ export default function ActogramChart({ entries }) {
   const gridTimes = [];
   for (let m = rangeStart; m <= rangeEnd; m += 120) gridTimes.push(m);
 
-  const plotWidth   = morning.length * COL_STEP + COL_GAP;
-  const maxScrollX  = Math.max(0, plotWidth - viewportWidth);
+  // Column width always fills the viewport into exactly DAYS_PER_VIEW slots —
+  // this is what guarantees a fixed 7-day window regardless of screen size,
+  // and it's also why paging can never produce a partial column: a "week" of
+  // scroll distance is by definition exactly the viewport width.
+  const colStep   = viewportWidth > 0 ? viewportWidth / DAYS_PER_VIEW : 50;
+  const barWidth  = colStep * BAR_WIDTH_RATIO;
+  const barRadius = barWidth / 2;
 
-  // Snaps a scroll offset down to the nearest column boundary (columns start
-  // at COL_GAP + k*COL_STEP) so we never leave a sliver of an adjacent day's
-  // bar peeking in at the edge — used for both the initial view and the
-  // clamp ceiling when paging by week.
-  const alignScroll = (target) => {
-    const clamped = clamp(target, 0, maxScrollX);
-    if (clamped < COL_GAP) return 0;
-    const k = Math.floor((clamped - COL_GAP) / COL_STEP);
-    return Math.min(COL_GAP + k * COL_STEP, maxScrollX);
-  };
-  const alignedMax = alignScroll(maxScrollX);
+  const plotWidth  = Math.max(morning.length * colStep, viewportWidth);
+  const maxScrollX = Math.max(0, morning.length * colStep - viewportWidth);
 
   useEffect(() => {
     if (viewportWidth === 0) return;
-    const target = alignedMax;
-    scrollRef.current?.scrollTo({ x: target, animated: false });
-    setScrollX(target);
+    scrollRef.current?.scrollTo({ x: maxScrollX, animated: false });
+    setScrollX(maxScrollX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [morning.length, viewportWidth]);
 
@@ -145,7 +137,7 @@ export default function ActogramChart({ entries }) {
   }, []);
 
   const goToWeek = (direction) => {
-    const next = clamp(scrollX + direction * WEEK_PX, 0, alignedMax);
+    const next = clamp(scrollX + direction * viewportWidth, 0, maxScrollX);
     scrollRef.current?.scrollTo({ x: next, animated: true });
     setScrollX(next);
   };
@@ -156,8 +148,8 @@ export default function ActogramChart({ entries }) {
 
   // Date range + average currently in view, for the header — mirrors Apple
   // Health's big "avg time asleep" stat with a "18 – 24 May" range beneath it.
-  const leftIndex  = clamp(Math.round(scrollX / COL_STEP), 0, morning.length - 1);
-  const rightIndex = clamp(Math.round((scrollX + viewportWidth) / COL_STEP) - 1, leftIndex, morning.length - 1);
+  const leftIndex  = clamp(Math.round(scrollX / colStep), 0, morning.length - 1);
+  const rightIndex = clamp(Math.round((scrollX + viewportWidth) / colStep) - 1, leftIndex, morning.length - 1);
   const visible    = morning.slice(leftIndex, rightIndex + 1);
   const avgSleepDuration = computeMetrics(visible).avgSleepDuration;
 
@@ -169,7 +161,7 @@ export default function ActogramChart({ entries }) {
     : `${startDate.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} \u2013 ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
   const atStart = scrollX <= 0;
-  const atEnd   = scrollX >= alignedMax - 1;
+  const atEnd   = scrollX >= maxScrollX - 1;
 
   // Sleep-midpoint trend line: the centre of each night's asleep segment,
   // connected day to day like a small time series — reveals circadian phase
@@ -184,7 +176,7 @@ export default function ActogramChart({ entries }) {
     const finalWake = shiftedMinutes(a.mq6) ?? shiftedMinutes(a.mq7);
     if (onset === null || finalWake === null) return null;
     return {
-      x: COL_GAP + i * COL_STEP + COL_WIDTH / 2,
+      x: i * colStep + colStep / 2,
       y: yFor((onset + finalWake) / 2) + TOP_PAD,
       date: entry.date,
     };
@@ -243,6 +235,7 @@ export default function ActogramChart({ entries }) {
           ref={scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
+          scrollEnabled={morning.length > DAYS_PER_VIEW}
           onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -258,7 +251,7 @@ export default function ActogramChart({ entries }) {
                 const yOut = yFor(outOfBed) + TOP_PAD;
                 return (
                   <ClipPath id={`clip-${entry.id}`} key={entry.id}>
-                    <Rect x={0} y={yBed} width={BAR_WIDTH} height={Math.max(0, yOut - yBed)} rx={BAR_RADIUS} />
+                    <Rect x={0} y={yBed} width={barWidth} height={Math.max(0, yOut - yBed)} rx={barRadius} />
                   </ClipPath>
                 );
               })}
@@ -276,8 +269,8 @@ export default function ActogramChart({ entries }) {
 
             {morning.map((entry, i) => {
               const a = entry.answers;
-              const colCenter = COL_GAP + i * COL_STEP + COL_WIDTH / 2;
-              const x = colCenter - BAR_WIDTH / 2;
+              const colCenter = i * colStep + colStep / 2;
+              const x = colCenter - barWidth / 2;
 
               const bed      = shiftedMinutes(a.mq1);
               const tried    = shiftedMinutes(a.mq2) ?? bed;
@@ -301,7 +294,7 @@ export default function ActogramChart({ entries }) {
               // row never spills wider than the bar itself.
               const dotY = Math.max(WAKING_DOT_R + 1, yBed - WAKING_ROW_OFFSET);
               const dotSpacing = wakings > 1
-                ? Math.min(WAKING_DOT_GAP, (BAR_WIDTH - WAKING_DOT_R * 2) / (wakings - 1))
+                ? Math.min(WAKING_DOT_GAP, (barWidth - WAKING_DOT_R * 2) / (wakings - 1))
                 : 0;
               const dotXs = Array.from({ length: wakings }, (_, k) =>
                 colCenter - ((wakings - 1) * dotSpacing) / 2 + k * dotSpacing,
@@ -312,10 +305,10 @@ export default function ActogramChart({ entries }) {
               return (
                 <React.Fragment key={entry.id}>
                   <G transform={`translate(${x}, 0)`} clipPath={`url(#clip-${entry.id})`}>
-                    <Rect x={0} y={yBed}   width={BAR_WIDTH} height={Math.max(0, yTried - yBed)} fill={AWAKE_FILL} />
-                    <Rect x={0} y={yTried} width={BAR_WIDTH} height={Math.max(0, yOnset - yTried)} fill={AWAKE_FILL} />
-                    <Rect x={0} y={yOnset} width={BAR_WIDTH} height={Math.max(0, yWake - yOnset)} fill={ASLEEP_FILL} />
-                    <Rect x={0} y={yWake}  width={BAR_WIDTH} height={Math.max(0, yOut - yWake)} fill={AWAKE_FILL} />
+                    <Rect x={0} y={yBed}   width={barWidth} height={Math.max(0, yTried - yBed)} fill={AWAKE_FILL} />
+                    <Rect x={0} y={yTried} width={barWidth} height={Math.max(0, yOnset - yTried)} fill={AWAKE_FILL} />
+                    <Rect x={0} y={yOnset} width={barWidth} height={Math.max(0, yWake - yOnset)} fill={ASLEEP_FILL} />
+                    <Rect x={0} y={yWake}  width={barWidth} height={Math.max(0, yOut - yWake)} fill={AWAKE_FILL} />
                   </G>
                   {dotXs.map((dx, idx) => (
                     <Circle key={idx} cx={dx} cy={dotY} r={WAKING_DOT_R} fill={WAKING_COLOR} />
