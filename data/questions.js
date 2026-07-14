@@ -86,19 +86,8 @@ export const MORNING_QUESTIONS = [
     conditionalOn: { id: 'mq8', value: 'yes' },
   },
   {
-    id: 'mq9',
-    number: 8,
-    text: 'How many alcoholic drinks did you have yesterday?',
-    hint: '1 drink = 355 mL beer, 150 mL wine, or 45 mL spirits',
-    type: 'number',
-    defaultValue: 0,
-    min: 0,
-    max: 30,
-    unit: 'drinks',
-  },
-  {
     id: 'mq12',
-    number: 9,
+    number: 8,
     text: 'How rested did you feel when you woke up for the day?',
     type: 'rating',
     options: [
@@ -111,7 +100,7 @@ export const MORNING_QUESTIONS = [
   },
   {
     id: 'mq13',
-    number: 10,
+    number: 9,
     text: 'Comments (optional)',
     type: 'text_input',
     placeholder: 'Any notes about your sleep last night...',

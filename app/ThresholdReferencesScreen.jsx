@@ -14,7 +14,6 @@ const THRESHOLDS = (tt) => [
   { title: tt('settings.thresholdEfficiency'), body: tt('settings.thresholdEfficiencyRef') },
   { title: tt('settings.thresholdLatency'),    body: tt('settings.thresholdLatencyRef') },
   { title: tt('settings.thresholdWaso'),       body: tt('settings.thresholdWasoRef') },
-  { title: tt('settings.thresholdAlcohol'),    body: tt('settings.thresholdAlcoholRef') },
 ];
 
 export default function ThresholdReferencesScreen() {

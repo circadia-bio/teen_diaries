@@ -237,26 +237,8 @@ const WasoBar = ({ value }) => {
 };
 
 const durationColor  = (m) => m === null ? '#4A7BB5' : m >= 420 && m <= 540 ? '#2E7D32' : m >= 360 && m <= 600 ? '#F59E0B' : '#DC2626';
-const alcoholColor   = (n) => n === null ? '#4A7BB5' : n < 1 ? '#2E7D32' : n <= 2 ? '#F59E0B' : '#DC2626';
 const latencyColor   = (m) => m === null ? '#4A7BB5' : m <= 15 ? '#2E7D32' : m <= 30 ? '#F59E0B' : '#DC2626';
 const wasoColor      = (m) => m === null ? '#4A7BB5' : m <= 20 ? '#2E7D32' : m <= 30 ? '#F59E0B' : '#DC2626';
-
-const AlcoholBar = ({ value }) => {
-  // NHS guideline: ≤14 units/week = 2 units/night avg; max display 5
-  if (value === null || isNaN(value)) return null;
-  const MAX = 5;
-  const marker = Math.min(Math.max(value, 0), MAX) / MAX * 100;
-  return <BandBar
-    segments={[
-      { width: 20, color: '#2E7D32' },  // 0–1 drink
-      { width: 20, color: '#F59E0B' },  // 1–2 drinks
-      { width: 60, color: '#DC2626' },  // >2 drinks
-    ]}
-    marker={marker}
-    ticks={[{ pct: 20, label: '1' }, { pct: 40, label: '2' }]}
-    endLabels={['0', '']}
-  />;
-};
 
 const StarRow = ({ value, max = 5, color = '#E07A20' }) => (
   <View style={styles.starRow}>
@@ -354,7 +336,6 @@ async function handleShareWeb({ metrics, userName, dateRange }) {
     { label: 'WASO',             value: fmt(metrics.avgWASO),              accent: wasoColor(metrics.avgWASO),                      emoji: '\uD83C\uDF19' },
     { label: 'Night Wakings',    value: metrics.avgNightWakings !== null ? `${metrics.avgNightWakings.toFixed(1)}x` : '\u2014', accent: '#4A7BB5', emoji: '\uD83D\uDD14' },
     { label: 'Early Waking',     value: metrics.earlyWakingPct !== null ? `${metrics.earlyWakingPct}%` : '\u2014',              accent: '#4A7BB5', emoji: '\u2600\uFE0F' },
-    { label: 'Drinks/Night',          value: metrics.avgAlcohol !== null ? `${metrics.avgAlcohol.toFixed(1)}` : '\u2014',             accent: alcoholColor(metrics.avgAlcohol),                 emoji: '\uD83C\uDF77' },
     { label: 'Restedness',       value: metrics.avgRestedness !== null ? `${metrics.avgRestedness.toFixed(1)}/5` : '\u2014',     accent: '#E07A20',                                       emoji: '\uD83C\uDF05' },
   ];
   const cols    = 2;
@@ -461,7 +442,6 @@ const ShareCard = React.forwardRef(({ metrics, userName, dateRange, width, heigh
     { emoji: '🌙', label: 'WASO',             value: fmt(metrics.avgWASO),              accent: wasoColor(metrics.avgWASO) },
     { emoji: '🔔', label: 'Night Wakings',   value: metrics.avgNightWakings !== null ? `${metrics.avgNightWakings.toFixed(1)}x` : '—', accent: '#4A7BB5' },
     { emoji: '☀️', label: 'Early Waking',    value: metrics.earlyWakingPct !== null ? `${metrics.earlyWakingPct}%` : '—',              accent: '#4A7BB5' },
-    { emoji: '🍷', label: 'Drinks/Night',          value: metrics.avgAlcohol !== null ? `${metrics.avgAlcohol.toFixed(1)}` : '—',             accent: alcoholColor(metrics.avgAlcohol) },
     { emoji: '🌅', label: 'Restedness',       value: metrics.avgRestedness !== null ? `${metrics.avgRestedness.toFixed(1)}/5` : '—',     accent: '#E07A20' },
   ];
 
@@ -664,11 +644,6 @@ export default function FinalReportScreen() {
           <Section title={t('report.nightDisruptions')}>
             <MetricCard icon="alert-circle-outline" label={t('report.avgNightWakings')} value={metrics.avgNightWakings !== null ? `${metrics.avgNightWakings.toFixed(1)} ${t('report.times')}` : '—'} subtext={t('report.avgNightWakingsSub')} color="#4A7BB5" />
             <MetricCard icon="alarm-outline"        label={t('report.earlyWaking')}     value={metrics.earlyWakingPct !== null ? `${metrics.earlyWakingPct}${t('report.ofNights')}` : '—'}          subtext={t('report.earlyWakingSub')}     color="#4A7BB5" />
-          </Section>
-
-          <Section title={t('report.lifestyle')}>
-            <MetricCard icon="wine-outline" label={t('report.avgAlcohol')} value={metrics.avgAlcohol !== null ? `${metrics.avgAlcohol.toFixed(1)} ${t('report.drinksNight')}` : '—'} subtext={t('report.avgAlcoholSub')} color={alcoholColor(metrics.avgAlcohol)} bar={<AlcoholBar value={metrics.avgAlcohol} />} />
-            <Text style={[styles.thresholdNote, { fontFamily: FONTS.bodyMedium }]}>{t('report.alcoholNote')}</Text>
           </Section>
 
           {qResults.length > 0 && (

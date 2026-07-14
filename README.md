@@ -27,7 +27,7 @@ It also includes a suite of validated one-time research questionnaires (ESS, ISI
 
 ## ✨ Features
 
-- 🌅 **Morning entry** — 10-question diary covering bedtime, sleep onset, night wakings, final awakening, and restedness
+- 🌅 **Morning entry** — 9-question diary covering bedtime, sleep onset, night wakings, final awakening, and restedness
 - 🌙 **Evening entry** — 5-question diary covering naps, caffeine, exercise, and medication
 - ⏱️ **Rich input types** — 24-hour time stepper, duration stepper, yes/no, 1–5 rating scale, number counter, medication tracker, and free text
 - 🔀 **Conditional questions** — follow-up questions appear automatically based on previous answers
@@ -408,7 +408,7 @@ Each question is a plain JavaScript object with a `type` field that controls how
 | `duration` | Hours + minutes stepper | Time to fall asleep, nap length |
 | `yes_no` | Large Yes / No buttons | Binary questions |
 | `rating` | 1–5 labelled option buttons | Sleep quality, restedness |
-| `number` | +/- counter with unit label | Number of drinks, wake-ups |
+| `number` | +/- counter with unit label | Number of wake-ups |
 | `medication` | Add/edit/delete entries with dose and time | Medication tracking |
 | `text_input` | Multiline free text | Comments, notes |
 

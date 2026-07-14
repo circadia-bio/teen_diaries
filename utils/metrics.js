@@ -18,7 +18,7 @@ const pct = (n, d) => (d > 0 ? Math.round((n / d) * 100) : null);
  * @returns {Object} Aggregate metric averages (nulls where data are absent)
  */
 export const computeMetrics = (morningEntries) => {
-  const sd = [], se = [], sol = [], w = [], q = [], r = [], nw = [], al = [], ew = [];
+  const sd = [], se = [], sol = [], w = [], q = [], r = [], nw = [], ew = [];
 
   for (const entry of morningEntries) {
     const a = entry.answers;
@@ -46,7 +46,6 @@ export const computeMetrics = (morningEntries) => {
     if (a.mq4 === 'yes' && a.mq4b !== undefined) nw.push(a.mq4b);
     else if (a.mq4 === 'no') nw.push(0);
 
-    if (a.mq9  !== undefined) al.push(a.mq9);
     if (a.mq8  !== undefined) ew.push(a.mq8 === 'yes' ? 1 : 0);
   }
 
@@ -59,7 +58,6 @@ export const computeMetrics = (morningEntries) => {
     avgQuality:          avg(q),
     avgRestedness:       avg(r),
     avgNightWakings:     avg(nw),
-    avgAlcohol:          avg(al),
     earlyWakingPct:      pct(ew.filter(Boolean).length, ew.length),
   };
 };
