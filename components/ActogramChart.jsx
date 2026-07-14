@@ -7,6 +7,12 @@
  * screen width. Each column is one vertical bar from bedtime (mq1) to
  * out-of-bed time (mq7).
  *
+ * The chart is built from a full contiguous calendar range (the first diary
+ * entry's date through the last), not just the entries that exist — a day
+ * with no diary entry still gets its own column (empty, with just the day
+ * label and a faint placeholder line), so a missed entry shows up as a gap
+ * rather than silently compressing the timeline.
+ *
  * Colours reuse the same green/amber/red semantics as the other Final
  * Report metric bars (durationColor, latencyColor, wasoColor in
  * app/final-report.jsx), but softened with the same alpha treatment those
@@ -47,6 +53,7 @@ const WAKING_DOT_GAP    = 7;   // preferred centre-to-centre spacing
 const WAKING_ROW_OFFSET = 9;   // distance above the bar's top edge
 const MIDPOINT_COLOR = '#1E3A5F';  // navy dashed trend line — sleep midpoint
 const GRID_COLOR    = '#E2EAF4';
+const EMPTY_COLOR    = '#D8E2EC';  // placeholder line for a day with no entry
 const AXIS_TEXT     = '#94A3B8';
 const HEADER_TEXT   = '#1E3A5F';
 
@@ -82,20 +89,45 @@ const formatDuration = (mins) => {
   return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
 };
 
+// 'YYYY-MM-DD' + 1 day, as a 'YYYY-MM-DD' string — avoids timezone drift by
+// anchoring at noon before doing the date arithmetic.
+const nextDateStr = (dateStr) => {
+  const d = new Date(`${dateStr}T12:00:00`);
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+};
+
 export default function ActogramChart({ entries }) {
   const scrollRef = useRef(null);
   const [viewportWidth, setViewportWidth] = useState(0);
   const [scrollX, setScrollX] = useState(0);
 
-  const morning = entries
+  const realEntries = entries
     .filter((e) => e.type === 'morning' && e.answers?.mq1 && e.answers?.mq7)
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  // Build the full contiguous calendar range so a missed diary entry shows
+  // up as an empty column rather than silently disappearing from the
+  // timeline. { date, entry } — entry is null for a day with nothing logged.
+  const calendarDays = [];
+  if (realEntries.length > 0) {
+    const byDate = new Map(realEntries.map((e) => [e.date, e]));
+    let cursor = realEntries[0].date;
+    const last = realEntries[realEntries.length - 1].date;
+    while (cursor <= last) {
+      calendarDays.push({ date: cursor, entry: byDate.get(cursor) ?? null });
+      cursor = nextDateStr(cursor);
+    }
+  }
+
   const rangeCalc = (() => {
-    if (morning.length === 0) return { rangeStart: 20 * 60, rangeEnd: 36 * 60 };
+    if (realEntries.length === 0) return { rangeStart: 20 * 60, rangeEnd: 36 * 60 };
     let min = Infinity;
     let max = -Infinity;
-    for (const e of morning) {
+    for (const e of realEntries) {
       const bed = shiftedMinutes(e.answers.mq1);
       const out = shiftedMinutes(e.answers.mq7);
       if (bed !== null) min = Math.min(min, bed);
@@ -122,15 +154,15 @@ export default function ActogramChart({ entries }) {
   const barWidth  = colStep * BAR_WIDTH_RATIO;
   const barRadius = barWidth / 2;
 
-  const plotWidth  = Math.max(morning.length * colStep, viewportWidth);
-  const maxScrollX = Math.max(0, morning.length * colStep - viewportWidth);
+  const plotWidth  = Math.max(calendarDays.length * colStep, viewportWidth);
+  const maxScrollX = Math.max(0, calendarDays.length * colStep - viewportWidth);
 
   useEffect(() => {
     if (viewportWidth === 0) return;
     scrollRef.current?.scrollTo({ x: maxScrollX, animated: false });
     setScrollX(maxScrollX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [morning.length, viewportWidth]);
+  }, [calendarDays.length, viewportWidth]);
 
   const handleScroll = useCallback((e) => {
     setScrollX(e.nativeEvent.contentOffset.x);
@@ -142,19 +174,19 @@ export default function ActogramChart({ entries }) {
     setScrollX(next);
   };
 
-  if (morning.length === 0) return null;
+  if (calendarDays.length === 0) return null;
 
   const totalHeight = chartHeight + TOP_PAD * 2 + LABEL_GAP;
 
   // Date range + average currently in view, for the header — mirrors Apple
   // Health's big "avg time asleep" stat with a "18 – 24 May" range beneath it.
-  const leftIndex  = clamp(Math.round(scrollX / colStep), 0, morning.length - 1);
-  const rightIndex = clamp(Math.round((scrollX + viewportWidth) / colStep) - 1, leftIndex, morning.length - 1);
-  const visible    = morning.slice(leftIndex, rightIndex + 1);
+  const leftIndex  = clamp(Math.round(scrollX / colStep), 0, calendarDays.length - 1);
+  const rightIndex = clamp(Math.round((scrollX + viewportWidth) / colStep) - 1, leftIndex, calendarDays.length - 1);
+  const visible    = calendarDays.slice(leftIndex, rightIndex + 1).map((d) => d.entry).filter(Boolean);
   const avgSleepDuration = computeMetrics(visible).avgSleepDuration;
 
-  const startDate  = new Date(`${morning[leftIndex].date}T12:00:00`);
-  const endDate    = new Date(`${morning[rightIndex].date}T12:00:00`);
+  const startDate  = new Date(`${calendarDays[leftIndex].date}T12:00:00`);
+  const endDate    = new Date(`${calendarDays[rightIndex].date}T12:00:00`);
   const sameMonth  = startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear();
   const rangeLabel = sameMonth
     ? `${startDate.toLocaleDateString(locale, { day: 'numeric' })} \u2013 ${endDate.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`
@@ -166,9 +198,11 @@ export default function ActogramChart({ entries }) {
   // Sleep-midpoint trend line: the centre of each night's asleep segment,
   // connected day to day like a small time series — reveals circadian phase
   // drift over the study (e.g. weekend shifts) the way a real actogram would.
-  // Broken into separate runs wherever there's a gap of more than one
-  // calendar day, so we never imply a trend across missing data.
-  const midpoints = morning.map((entry, i) => {
+  // A missing day is simply a null here, which breaks the run automatically
+  // (see the loop below) — so we never draw a line across a missed night.
+  const midpoints = calendarDays.map((day, i) => {
+    const entry = day.entry;
+    if (!entry) return null;
     const a = entry.answers;
     const tried    = shiftedMinutes(a.mq2) ?? shiftedMinutes(a.mq1);
     const solMin   = a.mq3 ? a.mq3.hours * 60 + a.mq3.minutes : 0;
@@ -178,7 +212,7 @@ export default function ActogramChart({ entries }) {
     return {
       x: i * colStep + colStep / 2,
       y: yFor((onset + finalWake) / 2) + TOP_PAD,
-      date: entry.date,
+      date: day.date,
     };
   });
 
@@ -189,12 +223,6 @@ export default function ActogramChart({ entries }) {
       if (currentRun.length) midpointRuns.push(currentRun);
       currentRun = [];
       continue;
-    }
-    if (currentRun.length) {
-      const prevDate = new Date(`${currentRun[currentRun.length - 1].date}T12:00:00`);
-      const curDate  = new Date(`${p.date}T12:00:00`);
-      const dayGap   = Math.round((curDate - prevDate) / 86400000);
-      if (dayGap !== 1) { midpointRuns.push(currentRun); currentRun = []; }
     }
     currentRun.push(p);
   }
@@ -235,14 +263,16 @@ export default function ActogramChart({ entries }) {
           ref={scrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          scrollEnabled={morning.length > DAYS_PER_VIEW}
+          scrollEnabled={calendarDays.length > DAYS_PER_VIEW}
           onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
           <Svg width={plotWidth} height={totalHeight}>
             <Defs>
-              {morning.map((entry) => {
+              {calendarDays.map((day) => {
+                const entry = day.entry;
+                if (!entry) return null;
                 const a = entry.answers;
                 const bed      = shiftedMinutes(a.mq1);
                 const outOfBed = shiftedMinutes(a.mq7);
@@ -250,7 +280,7 @@ export default function ActogramChart({ entries }) {
                 const yBed = yFor(bed) + TOP_PAD;
                 const yOut = yFor(outOfBed) + TOP_PAD;
                 return (
-                  <ClipPath id={`clip-${entry.id}`} key={entry.id}>
+                  <ClipPath id={`clip-${day.date}`} key={day.date}>
                     <Rect x={0} y={yBed} width={barWidth} height={Math.max(0, yOut - yBed)} rx={barRadius} />
                   </ClipPath>
                 );
@@ -267,9 +297,39 @@ export default function ActogramChart({ entries }) {
               />
             ))}
 
-            {morning.map((entry, i) => {
-              const a = entry.answers;
+            {calendarDays.map((day, i) => {
               const colCenter = i * colStep + colStep / 2;
+              const dayLabel  = new Date(`${day.date}T12:00:00`).toLocaleDateString(locale, { weekday: 'short' });
+              const entry = day.entry;
+
+              if (!entry) {
+                // Missed entry — keep the column's place with just a faint
+                // placeholder and the day label, instead of compressing the
+                // timeline as if the day never happened.
+                return (
+                  <React.Fragment key={day.date}>
+                    <Line
+                      x1={colCenter} y1={TOP_PAD}
+                      x2={colCenter} y2={chartHeight + TOP_PAD}
+                      stroke={EMPTY_COLOR}
+                      strokeWidth={1}
+                      strokeDasharray="2,3"
+                    />
+                    <SvgText
+                      x={colCenter}
+                      y={chartHeight + TOP_PAD * 2 + LABEL_GAP - 6}
+                      fontFamily={FONTS.bodyMedium}
+                      fontSize={12}
+                      fill={AXIS_TEXT}
+                      textAnchor="middle"
+                    >
+                      {dayLabel}
+                    </SvgText>
+                  </React.Fragment>
+                );
+              }
+
+              const a = entry.answers;
               const x = colCenter - barWidth / 2;
 
               const bed      = shiftedMinutes(a.mq1);
@@ -300,11 +360,9 @@ export default function ActogramChart({ entries }) {
                 colCenter - ((wakings - 1) * dotSpacing) / 2 + k * dotSpacing,
               );
 
-              const dayLabel = new Date(`${entry.date}T12:00:00`).toLocaleDateString(locale, { weekday: 'short' });
-
               return (
-                <React.Fragment key={entry.id}>
-                  <G transform={`translate(${x}, 0)`} clipPath={`url(#clip-${entry.id})`}>
+                <React.Fragment key={day.date}>
+                  <G transform={`translate(${x}, 0)`} clipPath={`url(#clip-${day.date})`}>
                     <Rect x={0} y={yBed}   width={barWidth} height={Math.max(0, yTried - yBed)} fill={AWAKE_FILL} />
                     <Rect x={0} y={yTried} width={barWidth} height={Math.max(0, yOnset - yTried)} fill={AWAKE_FILL} />
                     <Rect x={0} y={yOnset} width={barWidth} height={Math.max(0, yWake - yOnset)} fill={ASLEEP_FILL} />

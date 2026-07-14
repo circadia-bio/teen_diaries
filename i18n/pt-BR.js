@@ -142,7 +142,7 @@ export default {
     morningEntries_other: '{{count}} registros matinais',
     sleepTiming:         'Horários do sono',
     sleepPattern:        'Padrão de sono',
-    sleepPatternNote:    'Cada barra vai da hora de deitar até a hora de levantar; role para ver o estudo todo. Os marcadores de despertar mostram quantas vezes você acordou, não exatamente quando — o diário registra uma contagem e a duração total, não horários exatos. A linha tracejada mostra o ponto médio do seu sono a cada noite, indicando como o seu horário muda ao longo do tempo.',
+    sleepPatternNote:    'Cada barra vai da hora de deitar até a hora de levantar — uma coluna em branco significa que não houve registro naquele dia. Os marcadores de despertar mostram quantas vezes você acordou, não exatamente quando — o diário registra uma contagem e a duração total, não horários exatos. A linha tracejada mostra o ponto médio do seu sono a cada noite, indicando como o seu horário muda ao longo do tempo.',
     legendAsleep:        'Dormindo',
     legendAwake:         'Acordado(a) na cama',
     legendWaking:        'Despertar noturno',
