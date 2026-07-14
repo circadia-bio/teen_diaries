@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Sleep Diaries",
-    "slug": "sleep-diaries",
+    "name": "Teenage Sleep Diaries",
+    "slug": "teenage-sleep-diaries",
     "version": "1.1.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,15 +13,15 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.circadia.sleepdiaries"
+      "bundleIdentifier": "com.circadia.teenagesleepdiaries"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#C8DFF5"
       },
-      "package": "com.circadia.sleepdiaries"
+      "package": "com.circadia.teenagesleepdiaries"
     },
-    "scheme": "sleep-diaries",
+    "scheme": "teenage-sleep-diaries",
     "plugins": [
       "expo-router",
       "expo-localization",
@@ -32,7 +32,7 @@
       "output": "static",
       "favicon": "./assets/favicon.png",
       "template": "./web/index.html",
-      "baseUrl": "/SleepDiaries"
+      "baseUrl": "/TeenageSleepDiaries"
     }
   }
 }

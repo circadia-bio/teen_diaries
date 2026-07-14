@@ -1,6 +1,6 @@
 {
-  "name": "Sleep Diaries",
-  "short_name": "Sleep Diaries",
+  "name": "Teenage Sleep Diaries",
+  "short_name": "Teen Sleep",
   "description": "Open-source sleep diary app for clinical research — morning & evening questionnaires, sleep metrics, and data export.",
   "start_url": "/",
   "display": "standalone",
