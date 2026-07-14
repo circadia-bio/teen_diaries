@@ -619,8 +619,8 @@ export default function FinalReportScreen() {
 
           <Section title={t('report.sleepPattern')}>
             <View style={styles.actogramLegendRow}>
-              <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#2E7D32' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAsleep')}</Text></View>
-              <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#F59E0B' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAwake')}</Text></View>
+              <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#2E7D3233', borderWidth: 1, borderColor: '#2E7D3255' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAsleep')}</Text></View>
+              <View style={styles.legendItem}><View style={[styles.legendSwatch, { backgroundColor: '#F59E0B33', borderWidth: 1, borderColor: '#F59E0B55' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendAwake')}</Text></View>
               <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#DC2626' }]} /><Text style={[styles.legendLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.legendWaking')}</Text></View>
             </View>
             <View style={styles.actogramCard}>
