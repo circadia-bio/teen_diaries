@@ -14,4 +14,4 @@
  *
  * Used by: home.jsx, entry.jsx, final-report.jsx, ProfileModal.jsx
  */
-export const MIN_ENTRIES_FOR_REPORT = 14;
+export const MIN_ENTRIES_FOR_REPORT = 7;

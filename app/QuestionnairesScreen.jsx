@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 import { FONTS, SIZES } from '../theme/typography';
 import { loadAllQuestionnaires, loadEntries } from '../storage/storage';
 import { QUESTIONNAIRES } from '../data/questionnaires';
+import { MIN_ENTRIES_FOR_REPORT } from '../utils/constants';
 import showAlert from '../utils/alert';
 import t, { locale } from '../i18n';
 
@@ -31,7 +32,7 @@ export default function QuestionnairesScreen() {
 
   useEffect(() => { load(); }, []);
 
-  const resultsUnlocked = morningCount >= 14;
+  const resultsUnlocked = morningCount >= MIN_ENTRIES_FOR_REPORT;
 
   return (
     <SafeAreaView style={styles.root}>
@@ -94,7 +95,7 @@ export default function QuestionnairesScreen() {
                         <View style={[styles.qBadge, { backgroundColor: '#F1F5F9', borderColor: '#CBD5E1' }]}>
                           <Ionicons name="time-outline" size={13} color="#94A3B8" />
                           <Text style={[styles.qBadgeText, { color: '#94A3B8', fontFamily: FONTS.body }]}>
-                            {t('profileQuestionnaires.resultsAfter14')}
+                            {t('profileQuestionnaires.resultsAfter14', { count: MIN_ENTRIES_FOR_REPORT })}
                           </Text>
                         </View>
                         <Text style={[styles.qDate, { fontFamily: FONTS.bodyMedium }]}>

@@ -27,6 +27,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { saveQuestionnaire } from '../storage/storage';
+import { MIN_ENTRIES_FOR_REPORT } from '../utils/constants';
 import { FONTS, SIZES } from '../theme/typography';
 import t from '../i18n';
 import ScreenBackground from '../components/ScreenBackground';
@@ -308,7 +309,7 @@ const ResultScreen = ({ questionnaire, score, resultsUnlocked, onClose }) => {
           <Ionicons name="time-outline" size={48} color="#94A3B8" />
           <Text style={styles.resultTitle}>{t('questionnaireModal.allDone')}</Text>
           <Text style={styles.pendingDesc}>
-            {t('questionnaireModal.pendingDesc', { shortTitle: questionnaire.shortTitle })}
+            {t('questionnaireModal.pendingDesc', { shortTitle: questionnaire.shortTitle, count: MIN_ENTRIES_FOR_REPORT })}
           </Text>
         </View>
         <TouchableOpacity style={styles.doneBtn} onPress={onClose}>

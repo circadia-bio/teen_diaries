@@ -1,13 +1,9 @@
-# 🌙 Sleep Diaries
-
-> **SleepDiaries Protocol template**, seeded from [SleepDiaries v1.1.3](https://github.com/circadia-bio/SleepDiaries/releases/tag/v1.1.3). This README was inherited from the source project — update the app name, links, live URL, and citation below for your own study. See `TEMPLATE_SETUP.md` for a full setup checklist.
-
+# 🌙 Teenage Sleep Diaries
 
 ![](header.png)
 
-An open-source, research-grade sleep diary app built with React Native and Expo. Available on **iOS**, **Android**, and the **web**. Designed to be easily tailored by researchers, clinicians, and developers for their own sleep studies and clinical needs.
+An open-source, research-grade sleep diary app built with React Native and Expo, adapted for use in adolescent sleep research. Available on **iOS**, **Android**, and the **web**. Designed to be easily tailored by researchers, clinicians, and developers for their own sleep studies and clinical needs.
 
-[![Version](https://img.shields.io/badge/version-1.1.3-blue)](https://github.com/circadia-bio/SleepDiaries/releases)
 [![Stable](https://img.shields.io/badge/status-stable-brightgreen)](#)
 [![Expo](https://img.shields.io/badge/Expo-55-000020?logo=expo&logoColor=white)](https://expo.dev)
 [![React Native](https://img.shields.io/badge/React%20Native-0.83-61DAFB?logo=react&logoColor=white)](https://reactnative.dev)
@@ -19,26 +15,26 @@ An open-source, research-grade sleep diary app built with React Native and Expo.
 
 ---
 
-## 📖 What is Sleep Diaries?
+## 📖 What is Teenage Sleep Diaries?
 
-Sleep Diaries is a cross-platform app (iOS, Android, and web) that guides users through structured morning and evening questionnaires to track their sleep patterns over time. It is based on consensus sleep diary methodology used in clinical sleep research.
+Teenage Sleep Diaries is a cross-platform app (iOS, Android, and web) that guides adolescent users through structured morning and evening questionnaires to track their sleep patterns over time. It is based on consensus sleep diary methodology used in clinical sleep research, seeded from [Sleep Diaries](https://github.com/circadia-bio/SleepDiaries).
 
 The app is intentionally simple and modular — the question sets, input types, themes, and data storage can all be customised without touching the core navigation or UI logic.
 
-It also includes a suite of validated one-time research questionnaires (ESS, ISI, MEQ, PSQI, and others), a scored final report unlocking after 14 diary days, and support for researcher-assigned participant codes — making it suitable for deployment in structured sleep studies.
+It also includes a suite of validated one-time research questionnaires (ESS, ISI, MEQ, PSQI, and others), a scored final report unlocking after 7 diary days, and support for researcher-assigned participant codes — making it suitable for deployment in structured sleep studies.
 
 ---
 
 ## ✨ Features
 
-- 🌅 **Morning entry** — 13-question diary covering bedtime, sleep onset, night wakings, final awakening, sleep quality, and restedness
+- 🌅 **Morning entry** — 10-question diary covering bedtime, sleep onset, night wakings, final awakening, and restedness
 - 🌙 **Evening entry** — 5-question diary covering naps, caffeine, exercise, and medication
 - ⏱️ **Rich input types** — 24-hour time stepper, duration stepper, yes/no, 1–5 rating scale, number counter, medication tracker, and free text
 - 🔀 **Conditional questions** — follow-up questions appear automatically based on previous answers
 - 🎨 **Dual themes** — amber for morning entries, blue for evening entries
 - 💾 **Local persistence** — all entries saved to device storage via AsyncStorage
 - 📋 **Past entries** — scrollable history grouped by date with expandable answer cards
-- 📊 **Final report** — auto-unlocks after 14 morning entries, computes sleep metrics
+- 📊 **Final report** — auto-unlocks after 7 morning entries, computes sleep metrics
 - 📤 **Data export** — CSV and JSON export via native share sheet, including questionnaire results
 - 🖼️ **Share card** — share a branded sleep report image to social media from the final report screen, with the original home screen background; works on iOS, Android, and mobile web (PWA)
 - 🔔 **Push notifications** — daily 8am and 9pm reminders
@@ -50,15 +46,15 @@ It also includes a suite of validated one-time research questionnaires (ESS, ISI
 - 🌐 **Web** — Progressive Web App (PWA) installable on any device
 - 📲 **Installable** — installs to home screen on iOS, Android, and desktop Chrome with full offline support
 - 🌍 **Localisation** — full Portuguese (Brazilian) translation 🇧🇷, locale detected automatically from device settings
-- 📋 **Research questionnaires** — validated one-time instruments (ESS, ISI, DBAS-16, MEQ, PSQI, RU-SATED, STOP-BANG, MCTQ) accessible from the Profile, with results unlocking after 14 diary days
-- 💊 **My Medications** — save regular treatments to your profile; they auto-populate the morning and evening medication questions
+- 📋 **Research questionnaires** — validated one-time instruments (ESS, ISI, DBAS-16, MEQ, PSQI, RU-SATED, STOP-BANG, MCTQ) accessible from the Profile, with results unlocking after 7 diary days
+- 💊 **My Medications** — save regular treatments to your profile; they auto-populate the evening medication question
 
 ---
 
 ## 🗂️ Project Structure
 
 ```
-SleepDiaries/
+TeenageSleepDiaries/
 ├── app/                        # expo-router file-based navigation
 │   ├── _layout.jsx             # Root stack navigator + asset preloading + PWA splash
 │   ├── index.jsx               # Onboarding / name entry screen (+ research code)
@@ -136,8 +132,8 @@ SleepDiaries/
 
 ```bash
 # Clone the repository
-git clone https://github.com/circadia-bio/SleepDiaries.git
-cd SleepDiaries
+git clone https://github.com/circadia-bio/TeenageSleepDiaries.git
+cd TeenageSleepDiaries
 
 # Install dependencies
 npm install
@@ -162,7 +158,7 @@ npm run deploy
 
 This runs the deploy script which exports the web build, injects PWA tags, copies assets, and outputs everything to the `docs/` folder. The repository is configured for automatic deployment on every push to `main`.
 
-🌐 **Live web app:** _add your deployed URL here once you've set up hosting_
+🌐 **Live web app:** [teensleepdiaries.circadia-lab.uk](https://teensleepdiaries.circadia-lab.uk)
 
 ---
 
@@ -214,7 +210,7 @@ The tab bar, questionnaire nav buttons, instructions slideshow, and bottom short
 
 ## 📋 Research Questionnaires
 
-Sleep Diaries includes a set of validated one-time research questionnaires accessible from the Profile screen. These complement the daily diary by capturing baseline clinical and chronobiological characteristics of participants.
+Teenage Sleep Diaries includes a set of validated one-time research questionnaires accessible from the Profile screen. These complement the daily diary by capturing baseline clinical and chronobiological characteristics of participants.
 
 > **Note on permissions:** Several instruments are protected by copyright. It is the responsibility of the researcher or institution deploying this app to obtain the necessary permissions before using any instrument in a study. See the `credit` field in `data/questionnaires.js` or **Settings → Questionnaire credits** in the app for per-instrument details.
 
@@ -233,7 +229,7 @@ Sleep Diaries includes a set of validated one-time research questionnaires acces
 
 ### How it works
 
-Questionnaires appear in the **Profile** modal under a dedicated section. Each can be completed at any time, but **results are withheld until 14 morning diary entries have been collected** — matching the same threshold as the final report. This ensures results reflect a participant who has completed an adequate baseline period.
+Questionnaires appear in the **Profile** modal under a dedicated section. Each can be completed at any time, but **results are withheld until 7 morning diary entries have been collected** — matching the same threshold as the final report. This ensures results reflect a participant who has completed an adequate baseline period.
 
 Once the threshold is met, the scored result and a colour-banded interpretation are shown both in the profile and on the completion screen. A **Redo** option is available for follow-up timepoints, with a confirmation prompt before overwriting any existing result.
 
@@ -310,7 +306,7 @@ Several instruments are protected by copyright. The `credit` field on each defin
 
 ## 📥 Importing Data
 
-Entries exported as JSON from Sleep Diaries can be imported back into the app — useful for restoring a backup, transferring data between devices, or migrating participants between study phases.
+Entries exported as JSON from Teenage Sleep Diaries can be imported back into the app — useful for restoring a backup, transferring data between devices, or migrating participants between study phases.
 
 ### How to import
 
@@ -326,7 +322,7 @@ Entries exported as JSON from Sleep Diaries can be imported back into the app �
 
 ### File format
 
-The import expects a JSON file previously exported by Sleep Diaries. The file must contain an `entries` array. A `questionnaires` array is imported if present.
+The import expects a JSON file previously exported by Teenage Sleep Diaries. The file must contain an `entries` array. A `questionnaires` array is imported if present.
 
 ```json
 {
@@ -359,10 +355,10 @@ The import expects a JSON file previously exported by Sleep Diaries. The file mu
 
 ## 📲 Installing as an App
 
-Sleep Diaries is a Progressive Web App (PWA) — it can be installed directly to your home screen from the browser, with no App Store required. Once installed it runs full-screen, works offline, and behaves like a native app.
+Teenage Sleep Diaries is a Progressive Web App (PWA) — it can be installed directly to your home screen from the browser, with no App Store required. Once installed it runs full-screen, works offline, and behaves like a native app.
 
 ### iOS (Safari)
-1. Open [sleepdiaries.circadia-lab.uk](https://sleepdiaries.circadia-lab.uk) in **Safari**
+1. Open [teensleepdiaries.circadia-lab.uk](https://teensleepdiaries.circadia-lab.uk) in **Safari**
 2. Tap the **Share** button (box with arrow pointing up)
 3. Scroll down and tap **Add to Home Screen**
 4. Tap **Add** — the app icon will appear on your home screen
@@ -370,13 +366,13 @@ Sleep Diaries is a Progressive Web App (PWA) — it can be installed directly to
 > Note: PWA installation on iOS only works in Safari, not Chrome or Firefox.
 
 ### Android (Chrome)
-1. Open [sleepdiaries.circadia-lab.uk](https://sleepdiaries.circadia-lab.uk) in **Chrome**
+1. Open [teensleepdiaries.circadia-lab.uk](https://teensleepdiaries.circadia-lab.uk) in **Chrome**
 2. Tap the **three-dot menu** (⋮) in the top right
 3. Tap **Add to Home screen** or **Install app**
 4. Tap **Install** — the app icon will appear on your home screen
 
 ### Desktop (Chrome / Edge)
-1. Open [sleepdiaries.circadia-lab.uk](https://sleepdiaries.circadia-lab.uk)
+1. Open [teensleepdiaries.circadia-lab.uk](https://teensleepdiaries.circadia-lab.uk)
 2. Click the **install icon** (⊕) in the address bar
 3. Click **Install**
 
@@ -421,7 +417,8 @@ Each question is a plain JavaScript object with a `type` field that controls how
   id: 'mq4',
   text: 'Did you wake up during the night?',
   type: 'yes_no',
-  followUp: 'mq4b',
+  followUp: 'mq4b',   // can also be an array, e.g. ['mq4b', 'mq5', 'mq6'],
+                      // to reveal several follow-ups from one yes/no answer
 },
 
 // Follow-up — only shown if mq4 === 'yes'
@@ -504,7 +501,7 @@ All data is stored locally on the device using `@react-native-async-storage/asyn
     mq1: { hour: 22, minute: 30 },
     mq4: 'yes',
     mq4b: 2,
-    mq11: 4,
+    mq12: 4,
     // ...
   }
 }
@@ -529,11 +526,11 @@ This app implements the **Consensus Sleep Diary (CSD)** — a standardised instr
 - Early morning awakening
 - Total sleep time (computed)
 - Sleep efficiency (computed)
-- Sleep quality and restedness
+- Restedness
 
 ### Final report metrics
 
-The final report (unlocked after 14 morning entries) automatically computes:
+The final report (unlocked after 7 morning entries) automatically computes:
 
 | Metric | Formula |
 |--------|---------|
@@ -541,7 +538,6 @@ The final report (unlocked after 14 morning entries) automatically computes:
 | Sleep efficiency | Total sleep time ÷ time in bed × 100% |
 | Sleep onset latency | Average time to fall asleep |
 | WASO | Wake after sleep onset |
-| Sleep quality | Average of 1–5 ratings |
 | Restedness | Average of 1–5 ratings |
 
 ### Research code
@@ -577,14 +573,16 @@ The **Entry tab** shows a live stats dashboard above the entry cards:
 1. **Edit `data/questions.js`** to add, remove, or reorder diary questions
 2. **Edit `data/questionnaires.js`** to add, remove, or reorder one-time instruments
 3. **Add new input types** in `app/questionnaire.jsx` or `app/QuestionnaireModal.jsx`
-4. **Change the unlock threshold** — edit `MIN_ENTRIES_FOR_REPORT` in `utils/constants.js` (currently 14); the same constant governs the final report, questionnaire result visibility, and the entry-tab stats dashboard
+4. **Change the unlock threshold** — edit `MIN_ENTRIES_FOR_REPORT` in `utils/constants.js` (currently 7); the same constant governs the final report, questionnaire result visibility, and the entry-tab stats dashboard
 5. **Connect a backend** — replace the `AsyncStorage` calls in `storage/storage.js` with API calls
 
 ---
 
 ## 📄 Citation
 
-**França, L. G. S., Baehl, B., Howard, J., Kussow, F., Luna Colón, Y., & Leocadio-Miguel, M.** (2026). *Sleep Diaries* (v1.1.0) [Software]. Circadia Lab. https://doi.org/10.5281/zenodo.19683378
+**Anderson, K., Shanbhag, A., França, L. G. S., & Leocadio-Miguel, M.** (2026). *Teenage Sleep Diaries* [Software]. Circadia Lab. _(DOI to be added once archived on Zenodo)_
+
+This app is adapted from **Sleep Diaries**: França, L. G. S., Baehl, B., Howard, J., Kussow, F., Luna Colón, Y., & Leocadio-Miguel, M. (2026). *Sleep Diaries* (v1.1.0) [Software]. Circadia Lab. https://doi.org/10.5281/zenodo.19683378
 
 ---
 
@@ -592,9 +590,9 @@ The **Entry tab** shows a live stats dashboard above the entry cards:
 
 | Role | Names |
 |------|-------|
-| Principal Investigators | Lucas França, Mario Leocadio-Miguel |
-| Development | Lucas França |
-| Design | Bri Baehl, Jacob Howard, Frederic Kussow, Yuliana Luna Colón |
+| Authors | Kirstie Anderson, Anuja Shanbhag, Lucas França, Mario Leocadio-Miguel |
+
+_Roles to be confirmed as the author list grows._
 
 ---
 
@@ -663,7 +661,7 @@ Contributions are welcome. If you are adapting this for a research study and wan
 
 ![](assets/images/logo.png)
 
-Copyright © Circadia Lab — Lucas França & Mario Leocadio-Miguel
+Copyright © Circadia Lab — Kirstie Anderson, Anuja Shanbhag, Lucas França & Mario Leocadio-Miguel
 
 Released under the [MIT License](./LICENSE).
 
@@ -675,28 +673,12 @@ Design by Bri Baehl, Jacob Howard, Frederic Kussow, and Yuliana Luna Colón.
 
 ## 🏗️ Roadmap
 
-- [x] Persist answers with AsyncStorage
-- [x] Show name entered at onboarding on home screen
-- [x] Past entries screen with history view
-- [x] Final report with sleep metrics
-- [x] Push notification reminders (morning + evening)
-- [x] Data export (CSV / JSON) including questionnaire results
-- [x] Web app
-- [x] Progressive Web App (PWA) — installable on iOS, Android, and desktop
-- [x] Offline support via service worker
-- [x] JSON import with merge/replace (including questionnaire results)
-- [x] Optional research code for study participants
-- [x] Profile screen with editable participant info, stats, and metrics glossary
-- [x] Entry tab sleep stats dashboard
-- [x] Automatic deployment via CI/CD
-- [x] Full Portuguese (Brazil) localisation — strings, questions, and image assets
-- [x] SVG support via react-native-svg-transformer
-- [x] One-time research questionnaires (ESS, ISI, DBAS-16, MEQ, PSQI, RU-SATED, STOP-BANG, MCTQ) *(beta)*
-- [x] Medication presets — auto-populate diary medication questions from saved treatments
-- [x] Share card — share a branded sleep report image from the final report screen
-- [x] Full UI modernisation — glassy card system, gradient backgrounds, blur effects, refined typography and icons throughout
-- [x] Questionnaire result validation and removal of beta flag — all eight instruments now stable
-- [x] Entry date prompt — participants filling in entries between midnight and 14:00 are asked which night the entry belongs to, correctly attributing data for night owls and delayed sleep schedules
+Inherited from Sleep Diaries v1.1.3 (full feature set — see Features above).
+
+- [ ] Review question and instruction wording for an adolescent audience
+- [ ] Parental/guardian consent flow, if required by the study protocol
 - [ ] KSS (Karolinska Sleepiness Scale) — protocol integration pending
 - [ ] Backend API integration
 - [ ] Additional language support
+
+_Roadmap to be filled in as the study protocol is finalised._

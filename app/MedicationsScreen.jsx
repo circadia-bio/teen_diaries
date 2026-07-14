@@ -2,8 +2,8 @@
  * app/MedicationsScreen.jsx — Medication presets screen
  *
  * Lets participants save their regular medications (name, dose, usual times).
- * These presets are automatically loaded into the medication questions
- * (mq10b and eq4b) when starting a diary entry, saving re-entry each day.
+ * These presets are automatically loaded into the evening medication question
+ * (eq4b) when starting a diary entry, saving re-entry each day.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {

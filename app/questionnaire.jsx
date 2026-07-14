@@ -79,11 +79,25 @@ const buildFlow = (questions, answers) => {
     if (q.conditionalOn) continue;
     flow.push(q);
     if (q.followUp) {
-      const followUp = questions.find((x) => x.id === q.followUp);
-      if (followUp && answers[q.id] === 'yes') flow.push(followUp);
+      const followUpIds = Array.isArray(q.followUp) ? q.followUp : [q.followUp];
+      if (answers[q.id] === 'yes') {
+        for (const fid of followUpIds) {
+          const followUp = questions.find((x) => x.id === fid);
+          if (followUp) flow.push(followUp);
+        }
+      }
     }
   }
   return flow;
+};
+
+// Shifts a clock time so that hours before noon are treated as "the next day" —
+// this lets us compare bedtime and sleep-attempt time on a single number line
+// that spans midnight, without needing an actual date.
+const nightMinutes = (time) => {
+  if (!time) return null;
+  const shiftedHour = time.hour < 12 ? time.hour + 24 : time.hour;
+  return shiftedHour * 60 + time.minute;
 };
 
 const TimeInput = ({ value, onChange, theme }) => {
@@ -403,14 +417,15 @@ export default function QuestionnaireScreen() {
   const [done, setDone]                 = useState(false);
   const [saving, setSaving]             = useState(false);
 
-  // Prepopulate medication questions from saved presets
+  // Prepopulate the evening medication question from saved presets
+  // (there is no morning medication question — see mq10 removal).
   useEffect(() => {
+    if (entryType !== 'evening') return;
     loadMedicationPresets().then((presets) => {
       if (presets.length === 0) return;
-      const medKey = entryType === 'morning' ? 'mq10b' : 'eq4b';
       setAnswers((prev) => ({
         ...prev,
-        [medKey]: presets.map((p) => ({ ...p, id: Date.now() + Math.random() })),
+        eq4b: presets.map((p) => ({ ...p, id: Date.now() + Math.random() })),
       }));
     });
   }, []);
@@ -446,12 +461,35 @@ export default function QuestionnaireScreen() {
 
   const handleNext = async () => {
     if (!canProceed() || saving) return;
+
+    // Validate that "tried to sleep" (mq2) isn't before "got into bed" (mq1) —
+    // compared on a number line that treats hours before noon as the next day,
+    // so a legitimate midnight rollover (23:30 → 00:15) is still allowed.
+    if (entryType === 'morning' && question.id === 'mq2') {
+      const bed   = nightMinutes(answers.mq1);
+      const tried = nightMinutes(answers.mq2);
+      if (bed !== null && tried !== null && tried < bed) {
+        Alert.alert(
+          t('questionnaire.timeOrderErrorTitle') || 'Check your times',
+          t('questionnaire.timeOrderErrorBody') || "Trying to fall asleep can't be before getting into bed. Go back and check your answer to the previous question.",
+          [{ text: t('common.ok') || 'OK' }],
+        );
+        return;
+      }
+    }
+
     if (currentIndex < total - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       setSaving(true);
       try {
-        await saveEntry(entryType, answers, dateStr || undefined);
+        // If there were no night wakings, mq6 ("final awakening") was skipped —
+        // fall back to mq7 ("out of bed") so a value is always recorded.
+        const finalAnswers = { ...answers };
+        if (entryType === 'morning' && finalAnswers.mq4 === 'no') {
+          finalAnswers.mq6 = finalAnswers.mq7;
+        }
+        await saveEntry(entryType, finalAnswers, dateStr || undefined);
         await refresh();
         setDone(true);
       } catch (e) {
