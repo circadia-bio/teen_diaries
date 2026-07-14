@@ -305,7 +305,14 @@ const isAnswered = (item, value) => {
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function QuestionnaireScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id, flow, flowIndex } = useLocalSearchParams();
+
+  // Onboarding chaining: when launched with a `flow` param (comma-separated
+  // questionnaire ids), completing one advances to the next instead of
+  // going back, and finishing the last one lands on home with instructions.
+  const flowIds = flow ? String(flow).split(',') : null;
+  const flowIdx = flowIndex ? parseInt(flowIndex, 10) : 0;
+  const isOnboardingFlow = !!flowIds;
 
   const questionnaire = QUESTIONNAIRES.find((q) => q.id === id);
   const insets = useSafeAreaInsets();
@@ -356,10 +363,20 @@ export default function QuestionnaireScreen() {
 
   const handleBack = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
-    else router.back();
+    else if (!isOnboardingFlow) router.back();
+    // else: first question of an onboarding-flow questionnaire — no back option
   };
 
   const setAnswer = (itemId, val) => setAnswers((prev) => ({ ...prev, [itemId]: val }));
+
+  const handleFlowDone = () => {
+    if (!isOnboardingFlow) { router.back(); return; }
+    if (flowIdx + 1 < flowIds.length) {
+      router.replace({ pathname: '/QuestionnaireScreen', params: { id: flowIds[flowIdx + 1], flow, flowIndex: String(flowIdx + 1) } });
+    } else {
+      router.replace({ pathname: '/(tabs)/home', params: { showInstructions: '1' } });
+    }
+  };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, minHeight: height }]}>
@@ -370,9 +387,13 @@ export default function QuestionnaireScreen() {
 
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{questionnaire.shortTitle}</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
-          <Ionicons name="close" size={26} color="#1E3A5F" />
-        </TouchableOpacity>
+        {isOnboardingFlow ? (
+          <View style={styles.closeBtn} />
+        ) : (
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
+            <Ionicons name="close" size={26} color="#1E3A5F" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {questionnaire.beta && (
@@ -389,7 +410,7 @@ export default function QuestionnaireScreen() {
           questionnaire={questionnaire}
           score={result.score}
           resultsUnlocked={resultsUnlocked}
-          onDone={() => router.back()}
+          onDone={handleFlowDone}
         />
       ) : (
         <>
@@ -433,10 +454,12 @@ export default function QuestionnaireScreen() {
           </ScrollView>
 
           <View style={[styles.navRow, { paddingBottom: insets.bottom + 12 }]}>
-            <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-              <Ionicons name="chevron-back" size={22} color={C.primary} />
-              <Text style={styles.backBtnText}>{t('questionnaireModal.back')}</Text>
-            </TouchableOpacity>
+            {(currentIndex > 0 || !isOnboardingFlow) && (
+              <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+                <Ionicons name="chevron-back" size={22} color={C.primary} />
+                <Text style={styles.backBtnText}>{t('questionnaireModal.back')}</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[styles.nextBtn, !canProceed && styles.nextBtnDisabled]}
               onPress={handleNext}

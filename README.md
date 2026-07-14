@@ -229,6 +229,12 @@ Questionnaires appear in the **Profile** modal under a dedicated section. Each c
 
 Once the threshold is met, the scored result and a colour-banded interpretation are shown both in the profile and on the completion screen. A **Redo** option is available for follow-up timepoints, with a confirmation prompt before overwriting any existing result.
 
+### Onboarding flow
+
+ESS-CHAD and MCTQ are triggered automatically right after onboarding, before the participant reaches Home. This is driven by a `flow` param on `/QuestionnaireScreen` — a comma-separated list of questionnaire ids (set in `app/index.jsx`'s `handleStart`) that the screen chains through via `router.replace`, landing on Home (with the instructions slideshow) once the last one is complete. While in this onboarding chain, the close (✕) button and the Back button on each questionnaire's first item are hidden, since there's nowhere sensible to navigate back to. Results for both are held back like any other questionnaire until the diary-entry threshold is met, so participants see the same "pending" screen at Day 0.
+
+To change which questionnaires run at onboarding (or remove the flow entirely), edit the `flow` value in `app/index.jsx`; the same mechanism can chain through any number of questionnaire ids from `QUESTIONNAIRES`.
+
 ### Adding a new questionnaire
 
 All questionnaire definitions live in `data/questionnaires.js`. Each instrument is a plain JavaScript object:

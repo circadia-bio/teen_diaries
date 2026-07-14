@@ -25,7 +25,13 @@ export default function LoginScreen() {
     await saveName(name.trim());
     if (researchCode.trim()) await saveResearchCode(researchCode.trim());
     setLoading(false);
-    router.replace({ pathname: '/(tabs)/home', params: { showInstructions: '1' } });
+    // Trigger the one-time onboarding questionnaires (ESS-CHAD, then MCTQ)
+    // before landing on home. QuestionnaireScreen chains through `flow` and
+    // lands on home (with instructions) once the last one is completed.
+    router.replace({
+      pathname: '/QuestionnaireScreen',
+      params: { id: 'esschad', flow: 'esschad,mctq', flowIndex: '0' },
+    });
   };
 
   return (
