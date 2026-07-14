@@ -16,16 +16,24 @@
  *     (illustrative only — the diary records a count and total duration,
  *      not exact times)
  *
+ * Each day's bar is clipped to a single stadium (fully rounded) shape so the
+ * colour transitions inside it read as one continuous rounded bar, matching
+ * the rest of the app's rounded-corner aesthetic, rather than each segment
+ * having its own independently-rounded (and visually seamed) corners.
+ *
  * The Y axis is fixed on the left; only the bars scroll horizontally, so the
  * chart can span the whole study period. Chevrons page by one week at a time
  * (Apple Health style); free dragging still works for finer navigation, and
- * the header date range updates as you scroll either way.
+ * the header — including the average sleep duration for the visible week,
+ * also Apple-Health-style — updates as you scroll either way.
  */
 import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import { View, ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Rect, Circle, Line, Text as SvgText } from 'react-native-svg';
+import Svg, { Rect, Circle, Line, Text as SvgText, Defs, ClipPath, G } from 'react-native-svg';
 import { locale } from '../i18n';
+import t from '../i18n';
+import { computeMetrics } from '../utils/metrics';
 import { FONTS, SIZES } from '../theme/typography';
 
 const ASLEEP_FILL  = '#2E7D3233'; // green @ 20% — matches BandBar's band alpha
@@ -39,6 +47,7 @@ const PX_PER_MIN = 0.5; // 30px per hour
 const COL_WIDTH  = 40;
 const COL_GAP    = 12;
 const BAR_WIDTH  = 26;
+const BAR_RADIUS = BAR_WIDTH / 2; // fully rounded (stadium) bar ends
 const TOP_PAD    = 10;
 const LABEL_GAP  = 20;
 const AXIS_WIDTH = 46;
@@ -61,6 +70,13 @@ const formatClock = (mins) => {
   const h = Math.floor(mins / 60) % 24;
   const m = Math.round(mins % 60);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+};
+
+const formatDuration = (mins) => {
+  if (mins === null || mins === undefined || isNaN(mins)) return '\u2014';
+  const h = Math.floor(Math.abs(mins) / 60);
+  const m = Math.round(Math.abs(mins) % 60);
+  return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
 };
 
 export default function ActogramChart({ entries }) {
@@ -118,10 +134,13 @@ export default function ActogramChart({ entries }) {
 
   const totalHeight = chartHeight + TOP_PAD * 2 + LABEL_GAP;
 
-  // Date range currently in view, for the header label — mirrors Apple Health's
-  // "18 – 24 May" style heading above the chart.
+  // Date range + average currently in view, for the header — mirrors Apple
+  // Health's big "avg time asleep" stat with a "18 – 24 May" range beneath it.
   const leftIndex  = clamp(Math.round(scrollX / COL_STEP), 0, morning.length - 1);
   const rightIndex = clamp(Math.round((scrollX + viewportWidth) / COL_STEP) - 1, leftIndex, morning.length - 1);
+  const visible    = morning.slice(leftIndex, rightIndex + 1);
+  const avgSleepDuration = computeMetrics(visible).avgSleepDuration;
+
   const startDate  = new Date(`${morning[leftIndex].date}T12:00:00`);
   const endDate    = new Date(`${morning[rightIndex].date}T12:00:00`);
   const sameMonth  = startDate.getMonth() === endDate.getMonth() && startDate.getFullYear() === endDate.getFullYear();
@@ -134,6 +153,9 @@ export default function ActogramChart({ entries }) {
 
   return (
     <View>
+      <Text style={[styles.statLabel, { fontFamily: FONTS.bodyMedium }]}>{t('report.avgSleepDuration')}</Text>
+      <Text style={[styles.statValue, { fontFamily: FONTS.heading }]}>{formatDuration(avgSleepDuration)}</Text>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => goToWeek(-1)} disabled={atStart} hitSlop={8}>
           <Ionicons name="chevron-back" size={20} color={atStart ? '#C8D5E0' : HEADER_TEXT} />
@@ -169,6 +191,22 @@ export default function ActogramChart({ entries }) {
           scrollEventThrottle={16}
         >
           <Svg width={plotWidth} height={totalHeight}>
+            <Defs>
+              {morning.map((entry) => {
+                const a = entry.answers;
+                const bed      = shiftedMinutes(a.mq1);
+                const outOfBed = shiftedMinutes(a.mq7);
+                if (bed === null || outOfBed === null) return null;
+                const yBed = yFor(bed) + TOP_PAD;
+                const yOut = yFor(outOfBed) + TOP_PAD;
+                return (
+                  <ClipPath id={`clip-${entry.id}`} key={entry.id}>
+                    <Rect x={0} y={yBed} width={BAR_WIDTH} height={Math.max(0, yOut - yBed)} rx={BAR_RADIUS} />
+                  </ClipPath>
+                );
+              })}
+            </Defs>
+
             {gridTimes.map((m) => (
               <Line
                 key={m}
@@ -208,10 +246,12 @@ export default function ActogramChart({ entries }) {
 
               return (
                 <React.Fragment key={entry.id}>
-                  <Rect x={x} y={yBed}   width={BAR_WIDTH} height={Math.max(0, yTried - yBed)} rx={4} fill={AWAKE_FILL} />
-                  <Rect x={x} y={yTried} width={BAR_WIDTH} height={Math.max(0, yOnset - yTried)} fill={AWAKE_FILL} />
-                  <Rect x={x} y={yOnset} width={BAR_WIDTH} height={Math.max(0, yWake - yOnset)} fill={ASLEEP_FILL} />
-                  <Rect x={x} y={yWake}  width={BAR_WIDTH} height={Math.max(0, yOut - yWake)} rx={4} fill={AWAKE_FILL} />
+                  <G transform={`translate(${x}, 0)`} clipPath={`url(#clip-${entry.id})`}>
+                    <Rect x={0} y={yBed}   width={BAR_WIDTH} height={Math.max(0, yTried - yBed)} fill={AWAKE_FILL} />
+                    <Rect x={0} y={yTried} width={BAR_WIDTH} height={Math.max(0, yOnset - yTried)} fill={AWAKE_FILL} />
+                    <Rect x={0} y={yOnset} width={BAR_WIDTH} height={Math.max(0, yWake - yOnset)} fill={ASLEEP_FILL} />
+                    <Rect x={0} y={yWake}  width={BAR_WIDTH} height={Math.max(0, yOut - yWake)} fill={AWAKE_FILL} />
+                  </G>
                   {dots.map((dy, idx) => (
                     <Circle key={idx} cx={colCenter} cy={dy} r={4} fill={WAKING_COLOR} />
                   ))}
@@ -239,4 +279,6 @@ const styles = StyleSheet.create({
   row:         { flexDirection: 'row' },
   header:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, marginBottom: 8 },
   headerLabel: { fontSize: SIZES.caption, color: '#1E3A5F' },
+  statLabel:   { fontSize: SIZES.caption, color: '#94A3B8', paddingHorizontal: 4 },
+  statValue:   { fontSize: SIZES.sectionTitle, color: '#1E3A5F', paddingHorizontal: 4, marginBottom: 8 },
 });
