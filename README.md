@@ -218,14 +218,9 @@ Teenage Sleep Diaries includes a set of validated one-time research questionnair
 
 | Instrument | Full name | Items | Scale | Measures |
 |------------|-----------|-------|-------|----------|
-| ESS | Epworth Sleepiness Scale | 8 | 0–3 per item (max 24) | Daytime sleepiness |
-| ISI | Insomnia Severity Index | 7 | 0–4 per item (max 28) | Insomnia severity |
-| DBAS-16 | Dysfunctional Beliefs and Attitudes about Sleep | 16 | 0–10 mean (max 10) | Sleep-related cognitions |
-| MEQ | Morningness–Eveningness Questionnaire | 19 | Weighted sum (max 86) | Chronotype |
-| PSQI | Pittsburgh Sleep Quality Index | 17 | 7-component global (max 21) | Sleep quality |
-| RU-SATED | Ru-SATED Sleep Health Scale | 6 | 0–4 per item (max 24) | Multidimensional sleep health |
-| STOP-BANG | STOP-BANG Questionnaire | 8 | Yes/No count (max 8) | OSA risk screening |
 | MCTQ | Munich Chronotype Questionnaire | 7 | MSFsc (clock time) + SJL (hours) | Chronotype + social jetlag |
+
+> The other validated instruments (ESS, ISI, DBAS-16, PSQI, RU-SATED, STOP-BANG) remain fully defined in `data/questionnaires.js` but are currently disabled — re-enable any of them by adding them back to the `QUESTIONNAIRES` array at the bottom of that file.
 
 ### How it works
 

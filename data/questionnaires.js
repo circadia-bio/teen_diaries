@@ -619,8 +619,11 @@ function fmtH(h) {
   return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
 }
 
-// ─── Registry ──────────────────────────────────────────────────────────────────
-
-export const QUESTIONNAIRES = [ESS, ISI, DBAS16, MEQ, PSQI, RUSATED, STOPBANG, MCTQ];
+// ─── Registry ─────────────────────────────────────────────────────────────────────
+//
+// Only MCTQ is currently active in the app. The rest (ESS, ISI, DBAS16, MEQ,
+// PSQI, RUSATED, STOPBANG) are kept defined above so they can be re-enabled
+// by adding them back to this array — no other changes needed.
+export const QUESTIONNAIRES = [MCTQ];
 
 export const getQuestionnaire = (id) => QUESTIONNAIRES.find((q) => q.id === id) ?? null;
